@@ -39,18 +39,19 @@ f = open(playlist, 'r')
 f.seek(0)
 fdata = f.readlines()
 
-tmp = tempfile.TemporaryFile()
+tmp = tempfile.NamedTemporaryFile()
 
-with open(outputfile, 'wb') as outfile:
-    for filename in fdata:
-        fn = filename.rstrip()
-        if fn[-3:] == '.ts':
-            #print filename
-            try:
-                filepath = os.path.join(os.getcwd(), fn)
-                with open(filepath, 'rb') as readfile:
-                    shutil.copyfileobj(readfile, outfile)
-            except IOError:
-                pass
+for filename in fdata:
+    fn = filename.rstrip()
+    if fn[-3:] == '.ts':
+        try:
+            filepath = os.path.join(os.getcwd(), fn)
+            with open(filepath, 'rb') as readfile:
+                shutil.copyfileobj(readfile, tmp)
+        except IOError:
+            pass
 
-# ffmpeg -i movie.ts -c:v libx264 -c:a aac tmp.mp4
+cmd = 'ffmpeg -i %s -c:v libx264 -c:a aac %s' % (tmp.name, outputfile)
+os.system(cmd)
+
+tmp.close()
